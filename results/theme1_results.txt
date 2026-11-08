@@ -1,0 +1,59 @@
+Theme 1: train m = 100 kg, a1 = 1, a2 = 0.05, a3 = 0.1, b = 200; trip L = 30 km, Vref = 20 m/s (72 km/h)
+Controller: 7 rules (Past, Stop, D1, D2, D3, D4, Far); braking-zone centres d_i = [0    8   32   72  128  200] m for speeds v_i = [0   4   8  12  16  20] m/s
+            (braking profile adec = 1 m/s^2); K = 1.25, Kv = 1.25, uff(Vref) = 0.800; triangles, wtaver
+Near the station: u = Kp*d - K*v with Kp = 0.641 1/m; damping ratio zeta = 1.189 (90 kg), 1.130 (100 kg), 1.080 (110 kg)
+Steepness of u(d, v) for 0 <= d <= 400 m, 0 <= v <= 22 m/s: max |du/dv| = 1.25 s/m, max |du/dd| = 0.641 1/m
+Fastest trip with |u| <= 1 and v <= Vref (full power, cruise, full brake): 1511.2 s
+
+Columns: tArr arrival time (|L - x| <= 0.5 m and |v| <= 0.05 m/s from then on; - = never), over = max(x) - L if positive,
+         stop = final x - L, vCr mean speed for 5 km < x < 25 km, vMax max speed, aMin/aMax extreme acceleration (m/s^2),
+         |du| largest change of u in one 0.1 s sample, zeta damping ratio of the linearized stop (m = 100 kg)
+
+A. Nominal trip
+case                              tArr(s)  over(m)  stop(m)     vCr    vMax   aMin   aMax   |du|   zeta
+default controller                 1519.8    0.000   -0.000  20.000  20.000  -1.72   2.00  0.169   1.13
+   speed never negative: 1, position never decreases: 1, min distance to go 0.0000 m
+
+B. Dependence on the controller (nominal train)
+case                              tArr(s)  over(m)  stop(m)     vCr    vMax   aMin   aMax   |du|   zeta
+default controller                 1519.8    0.000   -0.000  20.000  20.000  -1.72   2.00  0.169   1.13
+MFs: 2 braking-zone steps          1531.8    0.000   -0.000  20.000  20.000  -1.80   2.00  0.167   1.79
+MFs: 10 braking-zone steps         1516.5    0.042   -0.000  20.000  20.000  -1.72   2.00  0.181   0.80
+MFs: Gaussian, wtaver              1519.0    0.417    0.417  20.000  20.000  -2.50   2.00  0.277   1.13
+MFs: Gaussian, wtsum               1519.3    0.417    0.417  20.000  20.000  -2.50   2.00  0.253   1.13
+MFs: triangles, wtsum              1519.8    0.000   -0.000  20.000  20.000  -1.72   2.00  0.169   1.13
+rules: K = 0.5                     1520.3    0.536   -0.000  20.000  20.000  -1.71   2.00  0.075   0.73
+rules: K = 2                       1520.8    0.000   -0.000  20.000  20.000  -1.79   2.00  0.239   1.42
+rules: adec = 0.5 m/s^2            1535.0    0.000   -0.000  20.000  20.000  -0.89   2.00  0.074   1.60
+rules: adec = 2 m/s^2              1514.4    1.108    0.000  20.000  20.000  -2.51   2.00  0.259   0.80
+rules: no feed-forward             1567.5    0.000   -0.000  19.384  19.384  -1.64   2.00  0.150   1.14
+rules: Kv = 0.25                   1520.0    0.000   -0.000  20.000  20.000  -1.72   2.00  0.147   1.13
+rules: Kv = 0.05                   1520.4    0.000   -0.000  20.000  20.000  -1.95   2.00  0.145   1.13
+Gaussian MFs: the degrees add up to between 0.560 and 1.310 (triangles: exactly 1)
+
+B2. Cruise rule with the heavier train (m = 110 kg, level track)
+case                              tArr(s)  over(m)  stop(m)     vCr    vMax   aMin   aMax   |du|   zeta
+Kv = 1.25 (default)                1523.5    0.000   -0.000  19.962  19.962  -1.70   1.82  0.146   1.08
+no feed-forward                    1571.1    0.000   -0.000  19.347  19.347  -1.62   1.82  0.157   1.09
+Kv = 0.25                          1533.1    0.000   -0.000  19.835  19.835  -1.70   1.82  0.156   1.08
+Kv = 0.05                          1558.2    0.000   -0.000  19.511  19.511  -1.70   1.82  0.158   1.08
+
+B3. Braking-zone gain on a 2 % downhill grade (m = 110 kg)
+case                              tArr(s)  over(m)  stop(m)     vCr    vMax   aMin   aMax   |du|   zeta
+K = 0.5                            1516.9    1.195    0.406  20.044  20.044  -1.79   2.01  0.082   0.70
+K = 1.25 (default)                 1516.0    0.168    0.168  20.044  20.044  -1.74   2.01  0.160   1.08
+K = 2                              1517.2    0.106    0.106  20.044  20.044  -1.79   2.01  0.274   1.36
+
+C. Robustness (default controller); grade > 0 is uphill
+case                              tArr(s)  over(m)  stop(m)     vCr    vMax   aMin   aMax   |du|   zeta
+m = 90 kg, grade -2 %              1510.5    0.138    0.138  20.107  20.107  -1.77   2.42  0.157   1.19
+m = 90 kg, grade +0 %              1516.3    0.000   -0.000  20.039  20.039  -1.74   2.22  0.137   1.19
+m = 90 kg, grade +2 %              1522.3    0.000   -0.138  19.971  19.971  -1.71   2.03  0.164   1.19
+m = 100 kg, grade -2 %             1513.2    0.153    0.153  20.075  20.075  -1.75   2.20  0.165   1.13
+m = 100 kg, grade +0 %             1519.8    0.000   -0.000  20.000  20.000  -1.72   2.00  0.169   1.13
+m = 100 kg, grade +2 %             1526.8    0.000   -0.153  19.925  19.925  -1.69   1.80  0.140   1.13
+m = 110 kg, grade -2 %             1516.0    0.168    0.168  20.044  20.044  -1.74   2.01  0.160   1.08
+m = 110 kg, grade +0 %             1523.5    0.000   -0.000  19.962  19.962  -1.70   1.82  0.146   1.08
+m = 110 kg, grade +2 %             1531.7    0.000   -0.168  19.879  19.879  -1.67   1.62  0.159   1.08
+Steepest uphill grade at which u = 1 still holds Vref with m = 110 kg: 2.78 %
+Predicted stopping offset m*g*sin(theta)/(b*Kp): 0.168 m (m = 110 kg, 2 % grade)

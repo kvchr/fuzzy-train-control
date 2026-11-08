@@ -1,0 +1,34 @@
+A. Common quadratic Lyapunov function V = x'Px
+   A common P exists for |a| < 0.2615 (bisection; symmetric in a since D*Ai(a)*D = Ai(-a), D = diag(-1,1))
+   a = 0.10: P = [1.8192 0.3393; 0.3393 1.1406], max eig(Ai'PAi - P) = -0.2731
+   a = 0.20: P = [1.3534 0.2184; 0.2184 1.1350], max eig(Ai'PAi - P) = -0.0879
+   a = 0.26: P = [1.0079 0.0054; 0.0054 1.0037], max eig(Ai'PAi - P) = -0.0017
+   a = 0.262: min over P of max eig = +2.53e-04 (no common P)
+   a = 0.270: min over P of max eig = +4.55e-03 (no common P)
+   a = 0.300: min over P of max eig = +1.99e-02 (no common P)
+
+B. h1(x) = min(max(x2 - 0.5, 0), 1)
+   Equilibria x ~= 0 need det(h1*A1 + h2*A2 - I) = 0.02 - h1*h2*a^2 = 0; h1*h2 <= 1/4,
+   so they exist exactly when a^2 >= 0.08, i.e. |a| >= 0.2828.
+   Near the origin (x2 < 0.5) h1 = 0 and only A2 acts (eigenvalues 0.9, 0.8): the origin
+   is locally asymptotically stable for every a.
+   Simulation: 1440 initial states (21 x 21 grid on [-10, 10]^2 and 1000 random on [-100, 100]^2),
+   20000 steps, a from 0 to 1 in steps of 0.0025. Outcome counts (origin / equilibrium / periodic /
+   bounded non-periodic / diverged) where they change:
+     from a = 0.0000: 1440    0    0    0    0
+     from a = 0.2850:  484  956    0    0    0
+     from a = 0.3900:  420  145  875    0    0
+     from a = 0.3975:  418    0 1022    0    0
+     from a = 0.4075:  414    0   46  980    0
+     from a = 0.4150:  412    0    0 1028    0
+   Every state reaches the origin for 0 <= a <= 0.2825 (and for the same |a| when a < 0).
+   No state diverged for any a in the scan (max over a of the diverged count: 0).
+   a = 0.282 : origin 1440, equilibrium    0, periodic    0, bounded non-periodic    0, diverged 0
+   a = 0.2828: origin 1440, equilibrium    0, periodic    0, bounded non-periodic    0, diverged 0
+   a = 0.283 : origin  493, equilibrium  947, periodic    0, bounded non-periodic    0, diverged 0; predicted equilibria (1.345, 0.983), (1.487, 1.017)
+   a = 0.29  : origin  472, equilibrium  968, periodic    0, bounded non-periodic    0, diverged 0; predicted equilibria (1.005, 0.890), (1.966, 1.110)
+   a = 0.35  : origin  431, equilibrium 1009, periodic    0, bounded non-periodic    0, diverged 0; predicted equilibria (0.507, 0.705), (3.600, 1.295)
+   a = 0.4   : origin  418, equilibrium    0, periodic 1022, bounded non-periodic    0, diverged 0; predicted equilibria (0.379, 0.646), (4.621, 1.354)
+   a = 0.5   : origin  399, equilibrium    0, periodic    0, bounded non-periodic 1041, diverged 0; predicted equilibria (0.258, 0.588), (6.442, 1.412)
+   a = 1     : origin  377, equilibrium    0, periodic    0, bounded non-periodic 1063, diverged 0; predicted equilibria (0.106, 0.520), (14.494, 1.480)
+   a = 0.29: states not at the origin end within 1.8e-14 of a predicted equilibrium
