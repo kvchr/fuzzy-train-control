@@ -16,12 +16,12 @@ This was assignment 1 of the course *Neuro-Fuzzy Control and Applications* (cour
 |---|---|
 | Controller | first-order Takagi-Sugeno, 7 rules on the distance to the station |
 | Nominal trip (30 km at 20 m/s) | arrival in 1519.8 s, 8.6 s more than the fastest possible trip; no overshoot |
-| Input and braking | \|u\| ≤ 1 throughout, strongest braking 1.72 m/s² |
+| Input and braking | \|u\| ≤ 1 throughout, strongest braking 1.72 m/s² (in the last 8 m, see below) |
 | Damping of the stop | ζ = 1.13 (100 kg), between 1.08 and 1.19 for 90 to 110 kg |
 | Mass ±10 % | speed 19.96 to 20.04 m/s, stop exactly at the station |
 | Slope ±2 % | speed within 0.121 m/s, stop within 0.168 m of the station (formula: m g sin θ / (b K_p)) |
 | Common quadratic Lyapunov function (Theme 2A) | exists for \|a\| < 0.2615 |
-| Global convergence with the given membership function (Theme 2B) | for \|a\| < √0.08 ≈ 0.2828; other equilibria exist for \|a\| ≥ √0.08 |
+| Global convergence with the given membership function (Theme 2B) | ruled out for \|a\| ≥ √0.08 ≈ 0.2828 (other equilibria exist); below that, every simulated initial state converges |
 
 ## Contents
 
@@ -101,7 +101,7 @@ which is 1.13 for the nominal train and stays above 1 (between 1.08 and 1.19) fo
 
 **A.** A common P > 0 with A_iᵀ P A_i − P < 0 for both rules exists exactly when f(a) < 0, where f(a) is the smallest possible largest eigenvalue of A_iᵀ P A_i − P over all P ≥ 0 with trace 1. This is a convex problem in P, so a grid search followed by `fminsearch` finds the minimum without an LMI solver (`lyapunov_margin.m`). Bisection on a gives the limit.
 
-**B.** Near the origin x2 < 0.5, so h1 = 0 and only A2 acts. A2 has eigenvalues 0.9 and 0.8, so the origin is locally asymptotically stable for every a. A point x ≠ 0 is an equilibrium when det(h1 A1 + h2 A2 − I) = 0.02 − h1 h2 a² = 0. Because h1 h2 ≤ 1/4, such points exist exactly when a² ≥ 0.08. They lie in the band 0.5 < x2 < 1.5, at x2 = 0.5 + h1 and x1 = 10 h1 a x2. The script checks this by simulating 1440 initial states (a 21 × 21 grid on [−10, 10]² and 1000 random states on [−100, 100]²) for 20,000 steps, with a from 0 to 1 in steps of 0.0025. It sorts the end states into: the origin, another equilibrium, a periodic orbit, bounded non-periodic motion, or divergence. All results are symmetric in the sign of a.
+**B.** Near the origin x2 < 0.5, so h1 = 0 and only A2 acts. A2 has eigenvalues 0.9 and 0.8, so the origin is locally asymptotically stable for every a. A point x ≠ 0 is an equilibrium when det(h1 A1 + h2 A2 − I) = 0.02 − h1 h2 a² = 0. Because h1 h2 ≤ 1/4, such points exist exactly when a² ≥ 0.08. They lie in the band 0.5 < x2 < 1.5, at x2 = 0.5 + h1 and x1 = 10 h1 a x2. The script checks this by simulating 1440 initial states (a 21 × 21 grid on [−10, 10]² and 1000 random states on [−100, 100]²) for 20,000 steps, with a from 0 to 1 in steps of 0.0025. It sorts the end states into: the origin, another equilibrium, a periodic orbit (period 2 to 400 steps), bounded motion with no period up to 400 steps (called *non-periodic* below), or divergence. All results are symmetric in the sign of a.
 
 ## Results
 
@@ -113,22 +113,26 @@ All numbers come from `matlab/run_theme1.m` and `matlab/run_theme2.m`. Their pri
 
 The train accelerates at full power, cruises at 20.000 m/s and arrives after 1519.8 s. The fastest trip possible with |u| ≤ 1 (full power, cruise, full braking) takes 1511.2 s. The position never passes the station and the speed never goes negative. The small steps in u during braking come at the points d_i, where the slope of the target-speed profile changes.
 
+The strongest braking, 1.72 m/s², is above the profile's 1 m/s². The reason is that v̂(d) is a chain of straight lines, not the curve √(2 a_dec d). To follow it the train must brake at v · dv̂/dd, which on the segment from d_(i−1) to d_i reaches 2 v_i / (v_i + v_(i−1)) · a_dec: twice a_dec on the last segment (0 to 8 m) and 1.33 a_dec on the one before. The peak indeed comes in the last 8 m; the train lags slightly behind the target, so it stays below 2 m/s². With a 0.5 m/s² profile the peak is 0.89 m/s², nearly the same multiple of a_dec (1.78 against 1.72).
+
 | Setting (nominal train) | Arrival (s) | Overshoot (m) | ζ |
 |---|---|---|---|
 | Default controller | 1519.8 | 0 | 1.13 |
 | 2 steps in the braking zone | 1531.8 | 0 | 1.79 |
 | 10 steps in the braking zone | 1516.5 | 0.042 | 0.80 |
-| Gaussian sets | 1519.0 | 0.417 | 1.13 |
+| Gaussian sets | 1519.0 | 0.417 | – |
 | K = 0.5 | 1520.3 | 0.536 | 0.73 |
 | K = 2 | 1520.8 | 0 | 1.42 |
 | Braking profile 0.5 m/s² | 1535.0 | 0 | 1.60 |
 | Braking profile 2 m/s² | 1514.4 | 1.108 | 0.80 |
 | No feed-forward term | 1567.5 | 0 | 1.14 |
 
+ζ is the damping ratio of the stop formula above. That formula assumes triangular sets, where only Stop and D1 act near the station, so it does not apply to the Gaussian sets (–).
+
 <p align="center"><img src="figures/fig3_parameter_study.png" alt="Speed against distance to go for the different settings, the last metres before the stop, and the start" width="760"></p>
 
-- **Every setting with ζ < 1 overshoots, and every setting with ζ > 1 does not.** Ten steps put the set D1 very close to the stop, which raises K_p and lowers ζ. More rules are not always better.
-- **Gaussian sets never reach zero** (their degrees add up to between 0.56 and 1.31), so the rule D1 still pushes at the stop and the train stops 0.417 m past it.
+- **With triangular sets on a level track, every setting with ζ < 1 swings past the stop and comes back, and every setting with ζ > 1 does not.** Ten steps put the set D1 very close to the stop, which raises K_p and lowers ζ. More rules are not always better.
+- **Gaussian sets never reach zero** (their degrees add up to between 0.56 and 1.31), so the rule D1 still pushes at the stop and the train stops 0.417 m past it. This is a shift of the final position, not a swing past it and back: the furthest point and the final position are the same. The ζ rule above does not cover this case.
 - **Without the feed-forward term** the proportional gain alone cannot hold 20 m/s; the train cruises at 19.38 m/s.
 - **Inference.** Each rule has a single premise, so the AND operator does not matter. With triangular sets the weighted sum gives exactly the same result as the weighted average, because the degrees add up to 1.
 
@@ -141,18 +145,18 @@ The train accelerates at full power, cruises at 20.000 m/s and arrives after 151
 | 110 | −2 % (downhill) | 1516.0 | 20.044 | +0.168 |
 | 110 | +2 % (uphill) | 1531.7 | 19.879 | −0.168 |
 
-With a different mass the train still stops exactly at the station. On a slope it stops a little short (uphill) or a little past the station (downhill), because the controller has no integral action. The simulated offset matches the formula m g sin θ / (b K_p) = 0.168 m, and it stays inside the 0.5 m stopping tolerance. The steepest uphill on which the motor can still hold 20 m/s with 110 kg is 2.78 %.
+With a different mass the train still stops exactly at the station. On a slope it stops a little short (uphill) or a little past the station (downhill), because the controller has no integral action. The simulated offset matches the formula m g sin θ / (b K_p) = 0.168 m, and it stays inside the 0.5 m stopping tolerance. Like the Gaussian case, this is a shift of the final position, not a swing. A larger K shrinks it (0.106 m with K = 2), but a smaller one is worse: with K = 0.5 (ζ = 0.70) the train on a 2 % downhill with 110 kg swings 1.195 m past the station, beyond the 0.5 m tolerance, before settling 0.406 m past it. The steepest uphill on which the motor can still hold 20 m/s with 110 kg is 2.78 %.
 
 ### Theme 2
 
 <p align="center"><img src="figures/fig5_stability_vs_a.png" alt="Lyapunov margin f(a), share of states reaching the origin, long-run outcomes and long-run x2 against a" width="760"></p>
 
 - **A.** A common quadratic Lyapunov function exists for |a| < 0.2615. For a = 0.2, for example, P = [1.3534 0.2184; 0.2184 1.1350] gives a largest eigenvalue of −0.0879.
-- **B.** Every one of the 1440 initial states reaches the origin for |a| ≤ 0.2825, the last value in the scan below √0.08 = 0.2828. From a = 0.285, some of them stop at the predicted equilibria (at a = 0.29 they end within 1.8·10⁻¹⁴ of them). Periodic orbits appear from a = 0.39, and bounded non-periodic motion from a = 0.4075. No state diverged for any a.
+- **B.** Every one of the 1440 initial states reaches the origin for |a| ≤ 0.2825, the last value in the scan below √0.08 = 0.2828. From a = 0.285, some of them stop at the predicted equilibria (at a = 0.29 they end within 1.8·10⁻¹⁴ of them). Periodic orbits appear from a = 0.39, and bounded non-periodic motion (no period up to 400 steps) from a = 0.4075. No state diverged for any a.
 
 <p align="center"><img src="figures/fig6_phase_portraits.png" alt="Trajectories from a grid of initial states for a = 0.25, 0.35 and 0.5" width="820"></p>
 
-**Answer.** The origin is locally asymptotically stable for every a. It is globally asymptotically stable (from every initial state tested) for |a| < √0.08 ≈ 0.2828, and not for |a| ≥ √0.08, where other equilibria exist. That limit is wider than 0.2615 from part A. The Lyapunov test in A must hold for every possible membership function, so it is only sufficient, and here it is conservative.
+**Answer.** The origin is locally asymptotically stable for every a. For |a| ≥ √0.08 ≈ 0.2828 it is provably not globally asymptotically stable, because other equilibria exist. For |a| < 0.2615 global stability is proved by the Lyapunov function of part A. Between 0.2615 and 0.2828 every initial state tested converges, which is numerical evidence, not a proof: the absence of other equilibria is necessary for global stability but does not by itself exclude, for example, periodic orbits. That limit is wider than 0.2615 from part A. The Lyapunov test in A must hold for every possible membership function, so it is only sufficient, and here it is conservative.
 
 ## Repository structure
 
